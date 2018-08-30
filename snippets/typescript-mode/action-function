@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: PX Action Function
+# key: faction
+# --
+${1:Action Name$(upper-camel-case yas-text)}name(): Action {
+        return createAction(ActionsClass.${1:$(upcase-with-underscores yas-text)};
+}

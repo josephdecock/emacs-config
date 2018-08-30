@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: PX Static Action String
+# key: saction
+# --
+static ${1:$(replace-regexp-in-string "[ -]" "_" (upcase yas-text))} = '[`(px-actions-prefix-from-file-name (buffer-file-name))`] ${1:Action Name$(capitalize yas-text)}'
+
