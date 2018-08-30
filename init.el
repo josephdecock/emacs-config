@@ -4,9 +4,6 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- ;; '(custom-safe-themes
- ;;   (quote
- ;;    ("3f44e2d33b9deb2da947523e2169031d3707eec0426e78c7b8a646ef773a2077" default)))
  '(package-selected-packages
    (quote
     (zenburn-theme fill-column-indicator flx string-inflection yasnippet-snippets yasnippet evil-magit 4clojure counsel-projectile counsel helm melpa-upstream-visit projectile magit company tide)))
@@ -121,33 +118,24 @@
   (replace-regexp-in-string "[ _-]" "" (upcase-initials string)))
 
 
-;; TODOS
+;;;;;;;;; init.el TODOS ;;;;;;;;;
 ;; Use org mode for .emacs?
-;; Use git for .emacs
-;; Try C-M-i in .ts file with tide
 ;; Use org mode for taking notes - scratch notes unsaved don't prevent closing emacs!
 ;; Back and forward like in vs code
 ;; Fill column of 80, except in my project it is 140
-;; Directory with nice fonts
+;; Directory explorer with nice icons
 ;; mode line improvements (the line noise at the beginning is gross)
-;; adsf
-
-;; Learn and use projectile mode
-;; Learn and use magit
 ;; Ctrl-Backspace with lots of whitespace should delete just whitespace
-;;
 ;; Use highlight changes mode, customize the faces so that you have
 ;; background not foreground colors, and automatically rotate faces on
 ;; save hook.
-;; Can I have highlight changes only highlight the fringe?
+;; Can I have highlight changes only highlight the fringe, or maybe do something subtle in the background?
 ;; Highlight changes next and previous changes need keybidings
-;; First, I'm going to do a dark theme
+
+;;;;;;;;; emacs learning ;;;;;;;;;
+;; projectile mode
+;; magit
+;; Try C-M-i in .ts file with tide
 
 
 
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(ivy-minibuffer-match-face-1 ((t (:background "#2B2B2B")))))
