@@ -20,143 +20,159 @@ settings here.
    'package-archives (cons "melpa" "https://melpa.org/packages/") t)
   (package-initialize)
 
-;;; Basic Visuals - Set Theme and Disable Bars
-(load-theme 'zenburn t)
-(menu-bar-mode -1)
-(tool-bar-mode -1)
+  (defun jmdc/tangle-emacs ()
+    "If the current buffer is 'emacs.org' the code-blocks are
+  tangled, and the tangled file is compiled."
+    (when (equal (buffer-file-name)
+                 (expand-file-name (concat user-emacs-directory "emacs.org")))
+      ;; Avoid running hooks when tangling.
+      (let ((prog-mode-hook nil))
+        (org-babel-tangle)
+        (byte-compile-file (concat user-emacs-directory "emacs.el")))))
 
-;;; Global Keybindings
-(global-set-key (kbd "C-z") 'undo)
-(global-set-key (kbd "C-x g") 'magit-status)
-
-;; Tab Completion
-(setq tab-always-indent 'complete)
-
-;; Indentation
-(setq-default indent-tabs-mode nil)
+  (add-hook 'after-save-hook 'jmdc/tangle-emacs)
 
 
-;; Wrapping and Filling
-; (setq fill-column 80)
-(require 'fill-column-indicator)
-(fci-mode 1)
- 
+  ;;; Basic Visuals - Set Theme and Disable Bars
+  (load-theme 'zenburn t)
+  (menu-bar-mode -1)
+  (tool-bar-mode -1)
 
-;;; Tide (It's an ad ;) )
-(defun setup-tide-mode ()
-  (interactive)
-  (tide-setup)
-  (flycheck-mode +1)
-  (setq flycheck-check-syntax-automatically '(save idle-change new-line mode-enabled))
-  (eldoc-mode +1)
-  (tide-hl-identifier-mode +1)
-  ;; company is an optional dependency. You have to
-  ;; install it separately via package-install
-  ;; `M-x package-install [ret] company`x
-  (company-mode +1))
+  ;;; Global Keybindings
+  (global-set-key (kbd "C-z") 'undo)
+  (global-set-key (kbd "C-x g") 'magit-status)
 
-(setq company-tooltip-align-annotations t) ;; aligns annotation to the right
-                                           ;; hand side
+  ;; Tab Completion
+  (setq tab-always-indent 'complete)
 
-(add-hook 'typescript-mode-hook #'setup-tide-mode)
+  ;; Indentation
+  (setq-default indent-tabs-mode nil)
 
 
-;;; Projectile
-(projectile-mode 1)
-(counsel-projectile-mode 1)
-
-;;; Completion
-(ivy-mode 1) ; Use ivy for completion
-(counsel-mode 1) ; Use ivy aware versions common commands
-(setq ivy-use-virtual-buffers t) ; Include recent files in buffer
-                                 ; switch
-(setq ivy-re-builders-alist  
-      '((t . ivy--regex-fuzzy)))
-
-(setq ivy-initial-inputs-alist nil)   ; Fuzzy completion doesn't need any
-                                      ; initial input
-(require 'flx)                        ; Load flx to sort fuzzy matches
+  ;; Wrapping and Filling
+                                          ; (setq fill-column 80)
+  (require 'fill-column-indicator)
+  (fci-mode 1)
 
 
-;; Spaces are usually not the right thing in a completion. Dashes usually are
-(define-key ivy-minibuffer-map " " '(lambda () (interactive) (insert "-")))
+  ;;; Tide (It's an ad ;) )
+  (defun jmdc/setup-tide-mode ()
+    (interactive)
 
-;; But some files have spaces in them, and it would be really annoying
-;; if I couldn't get to them with C-x C-f.
-(define-key counsel-find-file-map " " 'self-insert-command)
+    ;; Suppress compiler warnings about free variables
+    (eval-when-compile (defvar flycheck-check-syntax-automatically)) 
 
-;;; Wrap ISearch
-(defadvice isearch-repeat (after isearch-no-fail activate)
-  (unless isearch-success
-    (ad-disable-advice 'isearch-repeat 'after 'isearch-no-fail)
-    (ad-activate 'isearch-repeat)
-    (isearch-repeat (if isearch-forward 'forward))
-    (ad-enable-advice 'isearch-repeat 'after 'isearch-no-fail)
-    (ad-activate 'isearch-repeat)))
+    (tide-setup)
+    (flycheck-mode +1)
+    (setq flycheck-check-syntax-automatically '(save idle-change new-line mode-enabled))
+    (eldoc-mode +1)
+    (tide-hl-identifier-mode +1)
+    ;; company is an optional dependency. You have to
+    ;; install it separately via package-install
+    ;; `M-x package-install [ret] company`x
+    (company-mode +1))
 
-;;; Html
-(add-hook
- 'sgml-mode-hook
- (lambda ()
-   ;; Default indentation to 2, but let SGML mode guess, too.
-   (set (make-local-variable 'sgml-basic-offset) 2)
-   (sgml-guess-indent)))
+  (setq company-tooltip-align-annotations t) ;; aligns annotation to the right
+  ;; hand side
+
+  (add-hook 'typescript-mode-hook #'jmdc/setup-tide-mode)
 
 
-;;; Magit
-;; Can I get magit to watch the directory?
+  ;;; Projectile
+  (projectile-mode 1)
+  (counsel-projectile-mode 1)
 
-;;; YASnippet
-(require 'yasnippet)
-(yas-global-mode)
-(require 'ivy-yasnippet)
-;; BUG 'ivy-yasnippet inserts the expanded text into the buffer if you
-;; navigate through the list too much.
-;;
-;; 'ivy-yasnippet just doesn't do what I want. It lets you explore the
-;; snippets, and it starts out with the current expansion, but it
-;; doesn't use the current expanision as the initial search
+  ;;; Completion
+  (ivy-mode 1) ; Use ivy for completion
+  (counsel-mode 1) ; Use ivy aware versions common commands
+  (setq ivy-use-virtual-buffers t) ; Include recent files in buffer
+                                          ; switch
+  (setq ivy-re-builders-alist  
+        '((t . ivy--regex-fuzzy)))
 
-
-
-(defun px-actions-prefix-from-file-name (file-name)
-  (capitalize
-   (replace-regexp-in-string
-    "[_-]" " "
-    (file-name-sans-extension           ; Remove the .actions part of the filename
-     (file-name-base file-name)))))
-
-(defun upcase-with-underscores (string)
-  (replace-regexp-in-string "[ -]" "_" (upcase string)))
-
-(defun upper-camel-case (string)
-  (replace-regexp-in-string "[ _-]" "" (upcase-initials string)))
+  (setq ivy-initial-inputs-alist nil)   ; Fuzzy completion doesn't need any
+                                          ; initial input
+  (require 'flx)                        ; Load flx to sort fuzzy matches
 
 
-;; Org Mode
+  ;; Spaces are usually not the right thing in a completion. Dashes usually are
+  (define-key ivy-minibuffer-map " " '(lambda () (interactive) (insert "-")))
 
-(setq org-hide-emphasis-markers t)
-(setq org-hidden-keywords '(title email))
+  ;; But some files have spaces in them, and it would be really annoying
+  ;; if I couldn't get to them with C-x C-f.
+  (define-key counsel-find-file-map " " 'self-insert-command)
 
-(setq org-hidden-keywords nil)
+  ;;; Wrap ISearch
+  (defadvice isearch-repeat (after isearch-no-fail activate)
+    (unless isearch-success
+      (ad-disable-advice 'isearch-repeat 'after 'isearch-no-fail)
+      (ad-activate 'isearch-repeat)
+      (isearch-repeat (if isearch-forward 'forward))
+      (ad-enable-advice 'isearch-repeat 'after 'isearch-no-fail)
+      (ad-activate 'isearch-repeat)))
 
-;;;;;;;;; init.el TODOS ;;;;;;;;;
-;; Use org mode for .emacs?
-;; Use org mode for taking notes - scratch notes unsaved don't prevent closing emacs!
-;; Back and forward like in vs code
-;; Fill column of 80, except in my project it is 140
-;; Directory explorer with nice icons
-;; mode line improvements (the line noise at the beginning is gross)
-;; Ctrl-Backspace with lots of whitespace should delete just whitespace
-;; Use highlight changes mode, customize the faces so that you have
-;; background not foreground colors, and automatically rotate faces on
-;; save hook.
-;; Can I have highlight changes only highlight the fringe, or maybe do something subtle in the background?
-;; Highlight changes next and previous changes need keybidings
+  ;;; Html
+  (add-hook
+   'sgml-mode-hook
+   (lambda ()
+     ;; Default indentation to 2, but let SGML mode guess, too.
+     (set (make-local-variable 'sgml-basic-offset) 2)
+     (sgml-guess-indent)))
 
-;;;;;;;;; emacs learning ;;;;;;;;;
-;; projectile mode
-;; magit
-;; Try C-M-i in .ts file with tide
+
+  ;;; Magit
+  ;; Can I get magit to watch the directory?
+
+  ;;; YASnippet
+  (require 'yasnippet)
+  (yas-global-mode)
+  (require 'ivy-yasnippet)
+  ;; BUG 'ivy-yasnippet inserts the expanded text into the buffer if you
+  ;; navigate through the list too much.
+  ;;
+  ;; 'ivy-yasnippet just doesn't do what I want. It lets you explore the
+  ;; snippets, and it starts out with the current expansion, but it
+  ;; doesn't use the current expanision as the initial search
+
+
+
+  (defun px-actions-prefix-from-file-name (file-name)
+    (capitalize
+     (replace-regexp-in-string
+      "[_-]" " "
+      (file-name-sans-extension           ; Remove the .actions part of the filename
+       (file-name-base file-name)))))
+
+  (defun upcase-with-underscores (string)
+    (replace-regexp-in-string "[ -]" "_" (upcase string)))
+
+  (defun upper-camel-case (string)
+    (replace-regexp-in-string "[ _-]" "" (upcase-initials string)))
+
+
+  ;; Org Mode
+  (setq org-hide-emphasis-markers t)
+  (setq org-hidden-keywords '(title email))
+  (setq org-hidden-keywords nil)
+  (setq org-src-fontify-natively t)
+
+  ;;;;;;;;; init.el TODOS ;;;;;;;;;
+  ;; Use org mode for .emacs?
+  ;; Use org mode for taking notes - scratch notes unsaved don't prevent closing emacs!
+  ;; Back and forward like in vs code
+  ;; Fill column of 80, except in my project it is 140
+  ;; Directory explorer with nice icons
+  ;; mode line improvements (the line noise at the beginning is gross)
+  ;; Ctrl-Backspace with lots of whitespace should delete just whitespace
+  ;; Use highlight changes mode, customize the faces so that you have
+  ;; background not foreground colors, and automatically rotate faces on
+  ;; save hook.
+  ;; Can I have highlight changes only highlight the fringe, or maybe do something subtle in the background?
+  ;; Highlight changes next and previous changes need keybidings
+
+  ;;;;;;;;; emacs learning ;;;;;;;;;
+  ;; projectile mode
+  ;; magit
+  ;; Try C-M-i in .ts file with tide
 
 #+END_SRC
