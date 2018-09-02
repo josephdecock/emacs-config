@@ -5,3 +5,4 @@ recentf
 session*
 /emacs.el
 *.elc
+/#emacs.org#
